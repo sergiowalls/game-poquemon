@@ -21,7 +21,7 @@ struct PLAYER_NAME : public Player {
     /**
      * Attributes for your player can be defined here.
      */
-    struct distance {
+    struct cellDistance {
         Pos position;
         int movements;
         Dir firstDirection;
@@ -42,12 +42,12 @@ struct PLAYER_NAME : public Player {
         return {Top, Bottom, Left, Right};
     }
 
-    queue<distance> breadthFirstSearch(const Pos &poquemonPosition) const {
-        queue<distance> q;
+    queue<cellDistance> breadthFirstSearch(const Pos &poquemonPosition) const {
+        queue<cellDistance> q;
         q.push({poquemonPosition, 0});
         Matrix board (rows(), vector<bool> (cols(), false));
         board[poquemonPosition.i][poquemonPosition.j] = true;
-        queue<distance> pq;
+        queue<cellDistance> pq;
 
         while (not q.empty()) {
             Pos position = q.front().position;
@@ -79,7 +79,7 @@ struct PLAYER_NAME : public Player {
 
     decision chooseAction(const Poquemon& p) {
         Pos poquemonPosition = p.pos;
-        queue<distance> pq;
+        queue<cellDistance> pq;
         pq = breadthFirstSearch(poquemonPosition);
         if (not pq.empty()) {
             string s = "move";
