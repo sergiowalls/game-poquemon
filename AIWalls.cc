@@ -76,7 +76,7 @@ struct PLAYER_NAME : public Player {
         return poquemon(me()).scope >= max_scope();
     }
 
-    priority_queue<cellInfo, vector<cellInfo>, bestCell> breadthFirstSearch(const Pos &poquemonPosition) const {
+    priority_queue<cellInfo, vector<cellInfo>, bestCell> breadthFirstSearch(const Pos &poquemonPosition) {
         queue<cellInfo> q;
         q.push({poquemonPosition, 0});
         Matrix board (rows(), vector<bool> (cols(), false));
@@ -112,10 +112,30 @@ struct PLAYER_NAME : public Player {
         return pq;
     }
 
+    vector<int> enemies(const Pos &poquemonPosition, int scope) {
+        vector<int> enemies(4, -1);
+        for (int i = 0; i < 4; ++i) {
+            Pos nextPosition = poquemonPosition + directions[i];
+            int j = 1;
+            while (j <= scope and cell_type(nextPosition) == Empty) {
+                ++j;
+                nextPosition = nextPosition + directions[i];
+            }
+            enemies[i] = cell_id(nextPosition);
+        }
+        return enemies;
+    }
+
     decision chooseAction(const Poquemon& p) {
         Pos poquemonPosition = p.pos;
         priority_queue<cellInfo, vector<cellInfo>, bestCell> pq;
         pq = breadthFirstSearch(poquemonPosition);
+        vector<int> nearEnemies = enemies(p.pos, p.scope);
+        for (int i = 0; i < 4; ++i) {
+            string s = "attack";
+            Dir d = directions[i];
+            if (nearEnemies[i] != -1) return {s, d};
+        }
         if (not pq.empty()) {
             string s = "move";
             Dir d = pq.top().firstDirection;
