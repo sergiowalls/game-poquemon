@@ -21,15 +21,41 @@ struct PLAYER_NAME : public Player {
     /**
      * Attributes for your player can be defined here.
      */
-    struct cellDistance {
+    struct cellInfo {
         Pos position;
         int movements;
         Dir firstDirection;
+        CType cellType;
+        int pointsValue;
     };
 
     struct decision {
         string action;
         Dir direction;
+    };
+
+    struct bestCell {
+        bool operator()(const cellInfo& a, const cellInfo& b) const {
+
+            CType cellTypeA = a.cellType;
+            CType cellTypeB = b.cellType;
+
+            if (cellTypeA == cellTypeB) {
+                if (cellTypeA == Point) return a.pointsValue/a.movements < b.pointsValue/b.movements;
+                else return a.movements > b.movements;
+            }
+            else if (cellTypeA == Point) return false;
+            else if (cellTypeB == Point) return true;
+            else if (cellTypeA == Stone) return false;
+            else if (cellTypeB == Stone) return true;
+            else if (cellTypeA == Scope) return false;
+            else if (cellTypeB == Scope) return true;
+            else if (cellTypeA == Attack) return false;
+            else if (cellTypeB == Attack) return true;
+            else if (cellTypeA == Defense) return false;
+            return true;
+
+        }
     };
 
     vector<Dir> directions;
@@ -42,12 +68,20 @@ struct PLAYER_NAME : public Player {
         return {Top, Bottom, Left, Right};
     }
 
-    queue<cellDistance> breadthFirstSearch(const Pos &poquemonPosition) const {
-        queue<cellDistance> q;
+    bool hasMaxStones() {
+        return poquemon(me()).stones >= max_stone();
+    }
+
+    bool hasMaxScope() {
+        return poquemon(me()).scope >= max_scope();
+    }
+
+    priority_queue<cellInfo, vector<cellInfo>, bestCell> breadthFirstSearch(const Pos &poquemonPosition) const {
+        queue<cellInfo> q;
         q.push({poquemonPosition, 0});
         Matrix board (rows(), vector<bool> (cols(), false));
         board[poquemonPosition.i][poquemonPosition.j] = true;
-        queue<cellDistance> pq;
+        priority_queue<cellInfo, vector<cellInfo>, bestCell> pq;
 
         while (not q.empty()) {
             Pos position = q.front().position;
@@ -63,9 +97,10 @@ struct PLAYER_NAME : public Player {
                     else direction = q.front().firstDirection;
 
                     if (cellType != Wall and not board[nextPosition.i][nextPosition.j]) {
-                        if (cellType != Empty) pq.push({nextPosition, movements, direction});
+                        if (cellType != Empty) pq.push({nextPosition, movements, direction, cellType, points_value(nextPosition)});
                         q.push({nextPosition, movements, direction});
                     }
+
                     board[nextPosition.i][nextPosition.j] = true;
                 }
             }
@@ -79,11 +114,11 @@ struct PLAYER_NAME : public Player {
 
     decision chooseAction(const Poquemon& p) {
         Pos poquemonPosition = p.pos;
-        queue<cellDistance> pq;
+        priority_queue<cellInfo, vector<cellInfo>, bestCell> pq;
         pq = breadthFirstSearch(poquemonPosition);
         if (not pq.empty()) {
             string s = "move";
-            Dir d = pq.front().firstDirection;
+            Dir d = pq.top().firstDirection;
             return {s, d};
         }
         else {
