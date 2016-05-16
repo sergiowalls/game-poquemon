@@ -6,7 +6,7 @@ using namespace std;
  * Write the name of your player and save this file
  * with the same name and .cc extension.
  */
-#define PLAYER_NAME Walls
+#define PLAYER_NAME Wallsi
 
 struct PLAYER_NAME : public Player {
 
