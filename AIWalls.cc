@@ -112,7 +112,7 @@ struct PLAYER_NAME : public Player {
         return pq;
     }
 
-    vector<int> enemies(const Pos &poquemonPosition, int scope) {
+    vector<int> findEnemies(const Pos &poquemonPosition, int scope) {
         vector<int> enemies(4, -1);
         for (int i = 0; i < 4; ++i) {
             Pos nextPosition = poquemonPosition + directions[i];
@@ -126,17 +126,29 @@ struct PLAYER_NAME : public Player {
         return enemies;
     }
 
+    pair<bool, Dir> possibleAttack(Pos p, int scope) {
+        vector<int> nearEnemies = findEnemies(p, scope);
+        for (int i = 0; i < 4; ++i) {
+            if (nearEnemies[i] != -1) {
+                Dir d = directions[i];
+                Poquemon opponent = poquemon(nearEnemies[i]);
+                if (opponent.defense <= poquemon(me()).attack) return {true, d};
+            }
+        }
+        return {false, Top};
+    };
+
     decision chooseAction(const Poquemon& p) {
         Pos poquemonPosition = p.pos;
         priority_queue<cellInfo, vector<cellInfo>, bestCell> pq;
         pq = breadthFirstSearch(poquemonPosition);
-        vector<int> nearEnemies = enemies(p.pos, p.scope);
-        for (int i = 0; i < 4; ++i) {
+        pair<bool, Dir> attack = possibleAttack(poquemonPosition, p.scope);
+        if (attack.first) {
             string s = "attack";
-            Dir d = directions[i];
-            if (nearEnemies[i] != -1) return {s, d};
+            Dir d = attack.second;
+            return {s, d};
         }
-        if (not pq.empty()) {
+        else if (not pq.empty()) {
             string s = "move";
             Dir d = pq.top().firstDirection;
             return {s, d};
