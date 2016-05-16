@@ -95,7 +95,8 @@ struct PLAYER_NAME : public Player {
                     if (movements == 1) direction = it;
                     else direction = q.front().firstDirection;
 
-                    if (cellType != Wall and not board[nextPosition.i][nextPosition.j]) {
+                    if (cellType != Wall and not board[nextPosition.i][nextPosition.j] and
+                            (ghost_wall(nextPosition) == -1 or ghost_wall(nextPosition) > movements)) {
                         if (cellType != Empty) pq.push({nextPosition, movements, direction, cellType, points_value(nextPosition)});
                         q.push({nextPosition, movements, direction});
                     }
@@ -127,11 +128,14 @@ struct PLAYER_NAME : public Player {
 
     pair<bool, Dir> possibleAttack(const Pos& p, int scope) {
         vector<int> nearEnemies = findEnemies(p, scope);
+        Poquemon myPoquemon = poquemon(me());
         for (int i = 0; i < 4; ++i) {
             if (nearEnemies[i] != -1) {
                 Dir d = directions[i];
                 Poquemon opponent = poquemon(nearEnemies[i]);
-                if (opponent.defense <= poquemon(me()).attack) return {true, d};
+                if (opponent.defense <= myPoquemon.attack or
+                        opponent.points >= myPoquemon.points or
+                        opponent.attack < myPoquemon.defense) return {true, d};
             }
         }
         return {false, Top};
@@ -147,14 +151,17 @@ struct PLAYER_NAME : public Player {
             Dir d = attack.second;
             return {s, d};
         }
-        else if (not pq.empty()) {
-            string s = "move";
-            Dir d = pq.top().firstDirection;
-            return {s, d};
+        while (not pq.empty()) {
+            cellInfo cell = pq.top();
+            if (cell.cellType == Stone and hasMaxStones()) pq.pop();
+            else if (cell.cellType == Scope and hasMaxScope()) pq.pop();
+            else {
+                string s = "move";
+                Dir d = cell.firstDirection;
+                return {s, d};
+            }
         }
-        else {
-            return {"move", Top};
-        }
+        return {"move", Top};
     }
 
     /**
