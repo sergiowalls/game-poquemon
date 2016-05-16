@@ -37,23 +37,22 @@ struct PLAYER_NAME : public Player {
     struct bestCell {
         bool operator()(const cellInfo& a, const cellInfo& b) const {
 
-            CType cellTypeA = a.cellType;
-            CType cellTypeB = b.cellType;
-
-            if (cellTypeA == cellTypeB) {
-                if (cellTypeA == Point) return a.pointsValue/a.movements < b.pointsValue/b.movements;
-                else return a.movements > b.movements;
+            if (a.movements != b.movements) return a.movements > b.movements;
+            else {
+                CType cellTypeA = a.cellType;
+                CType cellTypeB = b.cellType;
+                if (cellTypeA == cellTypeB and cellTypeA == Point) return a.pointsValue < b.pointsValue;
+                else if (cellTypeA == Point) return false;
+                else if (cellTypeB == Point) return true;
+                else if (cellTypeA == Stone) return false;
+                else if (cellTypeB == Stone) return true;
+                else if (cellTypeA == Scope) return false;
+                else if (cellTypeB == Scope) return true;
+                else if (cellTypeA == Attack) return false;
+                else if (cellTypeB == Attack) return true;
+                else if (cellTypeA == Defense) return false;
+                return true;
             }
-            else if (cellTypeA == Point) return false;
-            else if (cellTypeB == Point) return true;
-            else if (cellTypeA == Stone) return false;
-            else if (cellTypeB == Stone) return true;
-            else if (cellTypeA == Scope) return false;
-            else if (cellTypeB == Scope) return true;
-            else if (cellTypeA == Attack) return false;
-            else if (cellTypeB == Attack) return true;
-            else if (cellTypeA == Defense) return false;
-            return true;
 
         }
     };
@@ -76,7 +75,7 @@ struct PLAYER_NAME : public Player {
         return poquemon(me()).scope >= max_scope();
     }
 
-    priority_queue<cellInfo, vector<cellInfo>, bestCell> breadthFirstSearch(const Pos &poquemonPosition) {
+    priority_queue<cellInfo, vector<cellInfo>, bestCell> breadthFirstSearch(const Pos& poquemonPosition) {
         queue<cellInfo> q;
         q.push({poquemonPosition, 0});
         Matrix board (rows(), vector<bool> (cols(), false));
@@ -112,21 +111,21 @@ struct PLAYER_NAME : public Player {
         return pq;
     }
 
-    vector<int> findEnemies(const Pos &poquemonPosition, int scope) {
+    vector<int> findEnemies(const Pos& poquemonPosition, int scope) {
         vector<int> enemies(4, -1);
         for (int i = 0; i < 4; ++i) {
             Pos nextPosition = poquemonPosition + directions[i];
             int j = 1;
-            while (j <= scope and cell_type(nextPosition) == Empty) {
-                ++j;
+            while (j <= scope and cell_type(nextPosition) == Empty and cell_id(nextPosition) == -1) {
                 nextPosition = nextPosition + directions[i];
+                ++j;
             }
             enemies[i] = cell_id(nextPosition);
         }
         return enemies;
     }
 
-    pair<bool, Dir> possibleAttack(Pos p, int scope) {
+    pair<bool, Dir> possibleAttack(const Pos& p, int scope) {
         vector<int> nearEnemies = findEnemies(p, scope);
         for (int i = 0; i < 4; ++i) {
             if (nearEnemies[i] != -1) {
