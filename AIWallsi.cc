@@ -159,7 +159,7 @@ struct PLAYER_NAME : public Player {
         while (not pq.empty()) {
             cellInfo cell = pq.top();
             if (not stoneScopeCell and
-                (cell.cellType == Stone and hasMaxStones() or cell.cellType == Scope and hasMaxScope())) {
+                ((cell.cellType == Stone and hasMaxStones()) or (cell.cellType == Scope and hasMaxScope()))) {
                 d = cell.firstDirection;
                 stoneScopeCell = true;
                 pq.pop();
