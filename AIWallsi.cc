@@ -117,7 +117,7 @@ struct PLAYER_NAME : public Player {
         for (int i = 0; i < 4; ++i) {
             Pos nextPosition = poquemonPosition + directions[i];
             int j = 1;
-            while (j <= scope and cell_type(nextPosition) == Empty and cell_id(nextPosition) == -1) {
+            while (j <= scope and cell_type(nextPosition) != Wall and cell_id(nextPosition) == -1) {
                 nextPosition = nextPosition + directions[i];
                 ++j;
             }
@@ -145,23 +145,29 @@ struct PLAYER_NAME : public Player {
         Pos poquemonPosition = p.pos;
         priority_queue<cellInfo, vector<cellInfo>, bestCell> pq;
         pq = breadthFirstSearch(poquemonPosition);
+        Dir d;
+        string s;
         pair<bool, Dir> attack = possibleAttack(poquemonPosition, p.scope);
         if (attack.first) {
-            string s = "attack";
-            Dir d = attack.second;
+            s = "attack";
+            d = attack.second;
             return {s, d};
         }
         while (not pq.empty()) {
             cellInfo cell = pq.top();
-            if (cell.cellType == Stone and hasMaxStones()) pq.pop();
-            else if (cell.cellType == Scope and hasMaxScope()) pq.pop();
+            if (cell.cellType == Stone and hasMaxStones() or cell.cellType == Scope and hasMaxScope()) {
+                d = cell.firstDirection;
+                pq.pop();
+            }
             else {
-                string s = "move";
-                Dir d = cell.firstDirection;
+                s = "move";
+                d = cell.firstDirection;
                 return {s, d};
             }
         }
-        return {"move", Top};
+        string s = "move";
+        d = Top;
+        return {s, d};
     }
 
     /**
